@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/modal";
 import { useDeleteTask } from "@/hooks/use-task-mutations";
 import { useTask } from "@/hooks/use-tasks";
 import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 function TaskDetailSkeleton() {
   return (
@@ -33,6 +34,7 @@ function TaskDetailSkeleton() {
 function TaskDetailContent() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const { data: task, isPending, isError, error, refetch } = useTask(id);
   const deleteTask = useDeleteTask();
 
@@ -72,12 +74,13 @@ function TaskDetailContent() {
   }
 
   const overdue = isOverdue(task);
+  const isOwn = !user || task.userId === user.id;
 
   return (
     <>
       <div className="rounded-xl border border-edge bg-surface p-6">
         <div className="flex items-start gap-3">
-          <CompleteToggle task={task} className="mt-1" />
+          {isOwn && <CompleteToggle task={task} className="mt-1" />}
           <div className="min-w-0 flex-1">
             <h1
               className={`text-xl font-semibold ${
@@ -95,16 +98,23 @@ function TaskDetailContent() {
                   {formatDate(task.dueDate)}
                 </span>
               )}
+              {!isOwn && task.owner && (
+                <span className="text-xs text-muted">
+                  Owned by <span className="font-medium text-foreground">{task.owner.email}</span>
+                </span>
+              )}
             </div>
           </div>
-          <div className="flex shrink-0 gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
-              Edit
-            </Button>
-            <Button variant="danger" size="sm" onClick={() => setConfirmingDelete(true)}>
-              Delete
-            </Button>
-          </div>
+          {isOwn && (
+            <div className="flex shrink-0 gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+              <Button variant="danger" size="sm" onClick={() => setConfirmingDelete(true)}>
+                Delete
+              </Button>
+            </div>
+          )}
         </div>
 
         {task.description && (

@@ -20,6 +20,8 @@ export interface Task {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  /** Present on list/detail responses; relevant when an admin views all tasks. */
+  owner?: { id: string; email: string; name: string | null };
 }
 
 export interface ListMeta {

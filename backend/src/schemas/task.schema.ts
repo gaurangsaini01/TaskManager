@@ -33,6 +33,8 @@ export const listTasksQuerySchema = z.object({
   order: z.preprocess(emptyToUndefined, z.enum(["asc", "desc"]).default("desc")),
   page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).default(1)),
   limit: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(50).default(10)),
+  // "all" lists every user's tasks — admin only, enforced in the service
+  scope: z.preprocess(emptyToUndefined, z.enum(["own", "all"]).default("own")),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;

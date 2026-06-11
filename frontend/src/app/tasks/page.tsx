@@ -20,12 +20,16 @@ import {
   taskParamsToSearch,
   type TaskListParams,
 } from "@/lib/task-params";
+import { useAuth } from "@/lib/auth";
 import type { Task } from "@/lib/types";
 
 function TasksPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = parseTaskParams(searchParams);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const allScope = isAdmin && params.scope === "all";
 
   const { data, isPending, isError, error, refetch, isPlaceholderData } = useTasks(params);
   const deleteTask = useDeleteTask();
@@ -63,7 +67,31 @@ function TasksPageContent() {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-foreground">Your tasks</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold text-foreground">
+            {allScope ? "All users' tasks" : "Your tasks"}
+          </h1>
+          {isAdmin && (
+            <div className="flex rounded-lg border border-edge bg-surface p-0.5 text-xs font-medium">
+              <button
+                onClick={() => applyParams({ scope: undefined })}
+                className={`cursor-pointer rounded-md px-2.5 py-1 transition-colors ${
+                  !allScope ? "bg-primary-soft text-primary" : "text-muted hover:text-foreground"
+                }`}
+              >
+                Mine
+              </button>
+              <button
+                onClick={() => applyParams({ scope: "all" })}
+                className={`cursor-pointer rounded-md px-2.5 py-1 transition-colors ${
+                  allScope ? "bg-primary-soft text-primary" : "text-muted hover:text-foreground"
+                }`}
+              >
+                All users
+              </button>
+            </div>
+          )}
+        </div>
         <Button onClick={() => setCreating(true)}>
           <svg viewBox="0 0 20 20" className="size-4 fill-current" aria-hidden="true">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />

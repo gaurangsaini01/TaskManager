@@ -14,9 +14,24 @@ export interface Actor {
   role: Role;
 }
 
+export interface TaskOwner {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+export type TaskWithOwner = Task & { owner: TaskOwner };
+
 export interface ListTasksResult {
-  data: Task[];
+  data: TaskWithOwner[];
   meta: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
+const ownerSelect = { select: { id: true, email: true, name: true } } as const;
+
+function withOwner<T extends Task & { user: TaskOwner }>(task: T): TaskWithOwner {
+  const { user, ...rest } = task;
+  return { ...rest, owner: user };
 }
 
 function buildOrderBy(
@@ -34,24 +49,30 @@ function buildOrderBy(
 }
 
 export async function listTasks(actor: Actor, query: ListTasksQuery): Promise<ListTasksResult> {
+  const allScope = query.scope === "all";
+  if (allScope && actor.role !== "ADMIN") {
+    throw new ApiError(403, "Admin access required to view all users' tasks", "FORBIDDEN");
+  }
+
   const where: Prisma.TaskWhereInput = {
-    userId: actor.id,
+    ...(allScope ? {} : { userId: actor.id }),
     ...(query.status ? { status: query.status } : {}),
     ...(query.search ? { title: { contains: query.search, mode: "insensitive" as const } } : {}),
   };
 
-  const [data, total] = await prisma.$transaction([
+  const [rows, total] = await prisma.$transaction([
     prisma.task.findMany({
       where,
       orderBy: buildOrderBy(query.sortBy, query.order),
       skip: (query.page - 1) * query.limit,
       take: query.limit,
+      include: { user: ownerSelect },
     }),
     prisma.task.count({ where }),
   ]);
 
   return {
-    data,
+    data: rows.map(withOwner),
     meta: {
       page: query.page,
       pageSize: query.limit,
@@ -62,15 +83,33 @@ export async function listTasks(actor: Actor, query: ListTasksQuery): Promise<Li
 }
 
 /**
- * Loads a task and enforces ownership. Foreign tasks return 404 (not 403)
- * so the API never reveals whether someone else's task id exists.
+ * Loads a task and enforces access rules:
+ * - owners can read and write their own tasks
+ * - admins can read anyone's task but modify only their own
+ * - everyone else gets 404 (not 403) so foreign task ids are never confirmed
  */
-export async function getTaskAuthorized(taskId: string, actor: Actor): Promise<Task> {
-  const task = await prisma.task.findUnique({ where: { id: taskId } });
-  if (!task || task.userId !== actor.id) {
+export async function getTaskAuthorized(
+  taskId: string,
+  actor: Actor,
+  intent: "read" | "write" = "read",
+): Promise<TaskWithOwner> {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { user: ownerSelect },
+  });
+  if (!task) {
     throw new ApiError(404, "Task not found", "NOT_FOUND");
   }
-  return task;
+  if (task.userId !== actor.id) {
+    if (actor.role === "ADMIN") {
+      if (intent === "read") {
+        return withOwner(task);
+      }
+      throw new ApiError(403, "Admins can view but not modify other users' tasks", "FORBIDDEN");
+    }
+    throw new ApiError(404, "Task not found", "NOT_FOUND");
+  }
+  return withOwner(task);
 }
 
 export async function createTask(actor: Actor, input: CreateTaskInput): Promise<Task> {
@@ -81,7 +120,7 @@ export async function createTask(actor: Actor, input: CreateTaskInput): Promise<
 }
 
 export async function updateTask(actor: Actor, taskId: string, input: UpdateTaskInput): Promise<Task> {
-  const existing = await getTaskAuthorized(taskId, actor);
+  const existing = await getTaskAuthorized(taskId, actor, "write");
   const task = await prisma.task.update({
     where: { id: existing.id },
     data: input,
@@ -90,6 +129,6 @@ export async function updateTask(actor: Actor, taskId: string, input: UpdateTask
 }
 
 export async function deleteTask(actor: Actor, taskId: string): Promise<void> {
-  const existing = await getTaskAuthorized(taskId, actor);
+  const existing = await getTaskAuthorized(taskId, actor, "write");
   await prisma.task.delete({ where: { id: existing.id } });
 }
