@@ -10,6 +10,7 @@ import {
   type UpdateTaskInput,
 } from "../schemas/task.schema.js";
 import * as taskService from "../services/task.service.js";
+import { listTaskActivity } from "../services/activity.service.js";
 
 export const taskRouter = Router();
 
@@ -28,6 +29,12 @@ taskRouter.get("/", validateQuery(listTasksQuerySchema), async (req, res) => {
 taskRouter.post("/", validateBody(createTaskSchema), async (req, res) => {
   const task = await taskService.createTask(authUser(req), req.body as CreateTaskInput);
   res.status(201).json({ data: task });
+});
+
+taskRouter.get("/:id/activity", async (req, res) => {
+  const task = await taskService.getTaskAuthorized(idParam(req.params.id), authUser(req));
+  const data = await listTaskActivity(task.id);
+  res.json({ data });
 });
 
 taskRouter.get("/:id", async (req, res) => {

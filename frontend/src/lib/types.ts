@@ -24,6 +24,27 @@ export interface Task {
   owner?: { id: string; email: string; name: string | null };
 }
 
+export type ActivityAction =
+  | "CREATED"
+  | "UPDATED"
+  | "STATUS_CHANGED"
+  | "ATTACHMENT_ADDED"
+  | "ATTACHMENT_REMOVED";
+
+export interface ActivityChange {
+  field: string;
+  from: string | null;
+  to: string | null;
+}
+
+export interface Activity {
+  id: string;
+  action: ActivityAction;
+  details: ActivityChange[] | null;
+  createdAt: string;
+  actor: { id: string; email: string; name: string | null } | null;
+}
+
 export interface ListMeta {
   page: number;
   pageSize: number;

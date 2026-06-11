@@ -102,6 +102,7 @@ export function useUpdateTask() {
     onSettled: (_task, _error, { id }) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: ["activity", id] });
     },
   });
 }

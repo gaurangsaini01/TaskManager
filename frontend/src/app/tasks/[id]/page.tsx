@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AuthGuard } from "@/components/auth-guard";
 import { Navbar } from "@/components/navbar";
+import { TaskActivity } from "@/components/tasks/task-activity";
 import { CompleteToggle, formatDate, isOverdue } from "@/components/tasks/task-item";
 import { TaskForm } from "@/components/tasks/task-form";
 import { PriorityBadge, StatusBadge } from "@/components/ui/badge";
@@ -133,6 +134,10 @@ function TaskDetailContent() {
             <dd>{formatDate(task.updatedAt)}</dd>
           </div>
         </dl>
+      </div>
+
+      <div className="mt-4">
+        <TaskActivity taskId={task.id} />
       </div>
 
       <Modal open={editing} title="Edit task" onClose={() => setEditing(false)}>

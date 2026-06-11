@@ -2,6 +2,7 @@ import { prisma } from "../db.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import type { Prisma, Role, Task } from "../generated/prisma/client.js";
 import type { CreateTaskInput, ListTasksQuery, UpdateTaskInput } from "../schemas/task.schema.js";
+import { diffTasks, logActivity } from "./activity.service.js";
 
 /*
  * Single mutation funnel for tasks: every create/update/delete goes through
@@ -116,6 +117,7 @@ export async function createTask(actor: Actor, input: CreateTaskInput): Promise<
   const task = await prisma.task.create({
     data: { ...input, userId: actor.id },
   });
+  await logActivity(task.id, actor.id, "CREATED");
   return task;
 }
 
@@ -125,6 +127,13 @@ export async function updateTask(actor: Actor, taskId: string, input: UpdateTask
     where: { id: existing.id },
     data: input,
   });
+
+  const changes = diffTasks(existing, task);
+  if (changes.length > 0) {
+    const onlyStatus = changes.length === 1 && changes[0]?.field === "status";
+    await logActivity(task.id, actor.id, onlyStatus ? "STATUS_CHANGED" : "UPDATED", changes);
+  }
+
   return task;
 }
 
