@@ -11,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiFetch, clearStoredToken, getStoredToken, setStoredToken } from "./api";
+import { ApiError, apiFetch, clearStoredToken, getStoredToken, setStoredToken } from "./api";
 import type { User } from "./types";
 
 interface AuthContextValue {
@@ -40,7 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     apiFetch<{ user: User }>("/auth/me", { skipAuthRedirect: true })
       .then((res) => setUser(res.user))
-      .catch(() => clearStoredToken())
+      .catch((err) => {
+        // Drop the token only when the server explicitly rejects it —
+        // a network blip or 5xx must not log the user out
+        if (err instanceof ApiError && err.status === 401) {
+          clearStoredToken();
+        }
+      })
       .finally(() => setIsReady(true));
   }, []);
 
