@@ -28,9 +28,11 @@ export function TaskListSkeleton() {
 export function EmptyState({
   hasActiveFilters,
   onClearFilters,
+  onCreate,
 }: {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onCreate?: () => void;
 }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed border-edge-strong bg-surface px-6 py-14 text-center">
@@ -57,6 +59,11 @@ export function EmptyState({
           <p className="mt-1 max-w-xs text-sm text-muted">
             Your list is empty. Created tasks show up here.
           </p>
+          {onCreate && (
+            <Button size="sm" className="mt-4" onClick={onCreate}>
+              Create your first task
+            </Button>
+          )}
         </>
       )}
     </div>
@@ -78,11 +85,19 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry: () 
   );
 }
 
-export function TaskList({ tasks }: { tasks: Task[] }) {
+export function TaskList({
+  tasks,
+  onEdit,
+  onDelete,
+}: {
+  tasks: Task[];
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}) {
   return (
     <ul className="flex flex-col gap-3">
       {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} />
+        <TaskItem key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
       ))}
     </ul>
   );
