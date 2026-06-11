@@ -51,6 +51,7 @@ export function useTaskEvents() {
         if (event.taskId) {
           queryClient.invalidateQueries({ queryKey: taskKeys.detail(event.taskId) });
           queryClient.invalidateQueries({ queryKey: ["activity", event.taskId] });
+          queryClient.invalidateQueries({ queryKey: ["attachments", event.taskId] });
         }
       };
 

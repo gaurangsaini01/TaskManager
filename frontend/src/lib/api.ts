@@ -36,16 +36,22 @@ interface RequestOptions {
 
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const token = getStoredToken();
+  // FormData passes through untouched — the browser sets the multipart boundary
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: options.method ?? "GET",
       headers: {
-        ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(options.body !== undefined && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: isFormData
+        ? (options.body as FormData)
+        : options.body !== undefined
+          ? JSON.stringify(options.body)
+          : undefined,
     });
   } catch {
     throw new ApiError(0, "Cannot reach the server. Check your connection and try again.", "NETWORK_ERROR");

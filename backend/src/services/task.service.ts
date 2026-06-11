@@ -3,6 +3,7 @@ import { ApiError } from "../middleware/errorHandler.js";
 import type { Prisma, Role, Task } from "../generated/prisma/client.js";
 import type { CreateTaskInput, ListTasksQuery, UpdateTaskInput } from "../schemas/task.schema.js";
 import { diffTasks, logActivity } from "./activity.service.js";
+import { destroyRemoteFilesForTask } from "./attachment.service.js";
 import { broadcastTaskEvent } from "./sse.js";
 
 /*
@@ -142,6 +143,7 @@ export async function updateTask(actor: Actor, taskId: string, input: UpdateTask
 
 export async function deleteTask(actor: Actor, taskId: string): Promise<void> {
   const existing = await getTaskAuthorized(taskId, actor, "write");
+  await destroyRemoteFilesForTask(existing.id);
   await prisma.task.delete({ where: { id: existing.id } });
   broadcastTaskEvent(existing.userId, { type: "task.deleted", taskId: existing.id });
 }

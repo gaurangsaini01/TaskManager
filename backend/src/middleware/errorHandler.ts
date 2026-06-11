@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import multer from "multer";
 import { ZodError } from "zod";
 import { Prisma } from "../generated/prisma/client.js";
 
@@ -50,6 +51,13 @@ export function errorHandler(
   // Malformed JSON body from express.json()
   if (err instanceof SyntaxError && "status" in err && (err as { status?: number }).status === 400) {
     res.status(400).json({ error: { message: "Malformed JSON body", code: "BAD_JSON" } });
+    return;
+  }
+
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE" ? "File is too large (max 5 MB)" : err.message;
+    res.status(400).json({ error: { message, code: err.code } });
     return;
   }
 

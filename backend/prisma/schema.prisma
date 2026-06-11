@@ -51,10 +51,29 @@ model Task {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   activities  Activity[]
+  attachments Attachment[]
 
   @@index([userId, status])
   @@index([userId, createdAt])
   @@map("tasks")
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  publicId     String
+  url          String
+  // Cloudinary stores PDFs as "image" and docx as "raw"; destroy() must
+  // receive the same resource_type the upload reported
+  resourceType String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
+
+  @@index([taskId])
+  @@map("attachments")
 }
 
 enum ActivityAction {

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TaskActivity } from "@/components/tasks/task-activity";
+import { TaskAttachments } from "@/components/tasks/task-attachments";
 import { CompleteToggle, formatDate, isOverdue } from "@/components/tasks/task-item";
 import { TaskForm } from "@/components/tasks/task-form";
 import { PriorityBadge, StatusBadge } from "@/components/ui/badge";
@@ -132,6 +133,10 @@ function TaskDetailContent() {
             <dd>{formatDate(task.updatedAt)}</dd>
           </div>
         </dl>
+      </div>
+
+      <div className="mt-4">
+        <TaskAttachments taskId={task.id} canEdit={isOwn} />
       </div>
 
       <div className="mt-4">

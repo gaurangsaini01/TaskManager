@@ -45,6 +45,17 @@ export interface Activity {
   actor: { id: string; email: string; name: string | null } | null;
 }
 
+export interface Attachment {
+  id: string;
+  publicId: string;
+  url: string;
+  resourceType: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
 export interface ListMeta {
   page: number;
   pageSize: number;
