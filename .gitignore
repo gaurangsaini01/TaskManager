@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+.next/
+out/
+
+# Environment — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Prisma generated client
+backend/src/generated/
+
+# Logs & OS noise
+*.log
+.DS_Store
+Thumbs.db
