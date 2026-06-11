@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 
 export function Navbar() {
@@ -17,16 +18,19 @@ export function Navbar() {
           TaskManager
         </Link>
 
-        {user && (
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="hidden max-w-48 truncate text-sm text-muted sm:block" title={user.email}>
-              {user.email}
-            </span>
-            <Button variant="ghost" size="sm" onClick={logout}>
-              Log out
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
+          {user && (
+            <>
+              <span className="hidden max-w-48 truncate text-sm text-muted sm:block" title={user.email}>
+                {user.email}
+              </span>
+              <Button variant="ghost" size="sm" onClick={logout}>
+                Log out
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
