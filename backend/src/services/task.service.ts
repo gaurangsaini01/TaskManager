@@ -3,6 +3,7 @@ import { ApiError } from "../middleware/errorHandler.js";
 import type { Prisma, Role, Task } from "../generated/prisma/client.js";
 import type { CreateTaskInput, ListTasksQuery, UpdateTaskInput } from "../schemas/task.schema.js";
 import { diffTasks, logActivity } from "./activity.service.js";
+import { broadcastTaskEvent } from "./sse.js";
 
 /*
  * Single mutation funnel for tasks: every create/update/delete goes through
@@ -118,6 +119,7 @@ export async function createTask(actor: Actor, input: CreateTaskInput): Promise<
     data: { ...input, userId: actor.id },
   });
   await logActivity(task.id, actor.id, "CREATED");
+  broadcastTaskEvent(task.userId, { type: "task.created", taskId: task.id });
   return task;
 }
 
@@ -133,6 +135,7 @@ export async function updateTask(actor: Actor, taskId: string, input: UpdateTask
     const onlyStatus = changes.length === 1 && changes[0]?.field === "status";
     await logActivity(task.id, actor.id, onlyStatus ? "STATUS_CHANGED" : "UPDATED", changes);
   }
+  broadcastTaskEvent(task.userId, { type: "task.updated", taskId: task.id });
 
   return task;
 }
@@ -140,4 +143,5 @@ export async function updateTask(actor: Actor, taskId: string, input: UpdateTask
 export async function deleteTask(actor: Actor, taskId: string): Promise<void> {
   const existing = await getTaskAuthorized(taskId, actor, "write");
   await prisma.task.delete({ where: { id: existing.id } });
+  broadcastTaskEvent(existing.userId, { type: "task.deleted", taskId: existing.id });
 }

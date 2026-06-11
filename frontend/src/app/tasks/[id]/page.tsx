@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AuthGuard } from "@/components/auth-guard";
-import { Navbar } from "@/components/navbar";
 import { TaskActivity } from "@/components/tasks/task-activity";
 import { CompleteToggle, formatDate, isOverdue } from "@/components/tasks/task-item";
 import { TaskForm } from "@/components/tasks/task-form";
@@ -166,9 +164,7 @@ function TaskDetailContent() {
 
 export default function TaskDetailPage() {
   return (
-    <AuthGuard>
-      <Navbar />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
         <Link
           href="/tasks"
           className="mb-4 inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
@@ -184,6 +180,5 @@ export default function TaskDetailPage() {
         </Link>
         <TaskDetailContent />
       </main>
-    </AuthGuard>
   );
 }

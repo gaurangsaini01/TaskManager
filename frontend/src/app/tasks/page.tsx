@@ -3,8 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { toast } from "sonner";
-import { AuthGuard } from "@/components/auth-guard";
-import { Navbar } from "@/components/navbar";
 import { TaskFilters } from "@/components/tasks/task-filters";
 import { TaskForm } from "@/components/tasks/task-form";
 import { EmptyState, ErrorState, TaskList, TaskListSkeleton } from "@/components/tasks/task-list";
@@ -146,11 +144,8 @@ function TasksPageContent() {
 
 export default function TasksPage() {
   return (
-    <AuthGuard>
-      <Navbar />
-      <Suspense fallback={<FullPageSpinner />}>
-        <TasksPageContent />
-      </Suspense>
-    </AuthGuard>
+    <Suspense fallback={<FullPageSpinner />}>
+      <TasksPageContent />
+    </Suspense>
   );
 }
