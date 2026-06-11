@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { config } from "./config.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { authRouter } from "./routes/auth.routes.js";
 
 export const app = express();
 
@@ -18,6 +19,8 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
+
+app.use("/auth", authRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
