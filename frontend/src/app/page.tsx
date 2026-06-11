@@ -1,10 +1,18 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { FullPageSpinner } from "@/components/ui/spinner";
+import { useAuth } from "@/lib/auth";
+
 export default function Home() {
-  return (
-    <main className="flex flex-1 items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold">TaskManager</h1>
-        <p className="mt-2 text-muted">Scaffold</p>
-      </div>
-    </main>
-  );
+  const { user, isReady } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isReady) return;
+    router.replace(user ? "/tasks" : "/login");
+  }, [isReady, user, router]);
+
+  return <FullPageSpinner />;
 }
