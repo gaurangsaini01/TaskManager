@@ -5,8 +5,8 @@ import type { CreateTaskInput, ListTasksQuery, UpdateTaskInput } from "../schema
 
 /*
  * Single mutation funnel for tasks: every create/update/delete goes through
- * this service, so later phases (activity log, SSE) hook in here once instead
- * of touching every route.
+ * this service, so cross-cutting concerns (activity log, real-time events)
+ * hook in one place instead of every route.
  */
 
 export interface Actor {
